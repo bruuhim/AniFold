@@ -12,10 +12,15 @@ Created by [@bruuhim](https://github.com/bruuhim) with ❤️
 
 - 🔍 **Smart Anime Detection** - Cleans up messy folder names (goodbye `1080p.BluRay.x265.YURASUKA`)
 - 🌐 **MyAnimeList Integration** - Auto-searches MAL for accurate anime titles
+- 📚 **Library Scan Mode** - Process entire anime collections with `--library` flag
 - 🎨 **DeviantArt Search** - Opens DeviantArt with pre-filled icon search
-- 🖼️ **Auto Icon Selection** - Grabs the latest downloaded icon automatically
-- 🎌 **Fun Anime UI** - ASCII art, random anime quotes, and colorful terminal output
+- 🖼️ **Auto Icon Selection** - Grabs the latest downloaded icon automatically with validation
+- ⚡ **Batch Processing** - `--auto-select` and `--no-wait` for automated workflows
+- 📝 **Logging & Caching** - Optional logging and MAL response caching for efficiency
+- 🎌 **Fun Anime UI** - ASCII art, 16 random anime quotes, and colorful terminal output
 - ⭐ **MAL Scores** - Shows anime ratings to help you pick the right one
+- 🔄 **Retry Logic** - Automatic retries with exponential backoff for network failures
+- 🎭 **Dry Run Mode** - Preview what will happen without making changes
 
 ---
 
@@ -39,8 +44,79 @@ cd AniFold
 # Install dependencies
 pip install requests
 
-# Run it
+# Run it (auto-detects single folder or library)
 python anifold.py
+```
+
+### Method 3: Advanced Usage
+
+```bash
+# Process entire anime library
+python anifold.py --library "D:\Anime Collection"
+
+# Batch mode with auto-selection
+python anifold.py --library "D:\Anime" --auto-select --no-wait --log batch.log
+```
+
+---
+
+## 📋 Command Line Options
+
+AniFold supports various CLI options for flexible usage:
+
+```
+usage: anifold.py [-h] [--library LIBRARY] [--single] [--icon-dir ICON_DIR]
+                  [--auto-select] [--no-wait] [--log LOG] [--dry-run]
+                  [--cache-file CACHE_FILE] [--cache-ttl-hours CACHE_TTL_HOURS]
+                  [--max-retries MAX_RETRIES] [--retry-delay RETRY_DELAY]
+
+🎌 AniFold - Anime Folder Icon Setter from DeviantArt
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -l LIBRARY, --library LIBRARY
+                        Path to anime library folder (scans all subdirectories)
+  --icon-dir ICON_DIR   Icon directory path (default: C:\AniFold\icons)
+  --auto-select         Automatically select first MAL result (for batch processing)
+  --no-wait             Skip ENTER prompts and continue immediately
+  --log LOG             Log operations to specified file
+  --dry-run             Show what would be done without making changes
+  --cache-file CACHE_FILE
+                        MAL cache file (default: C:\Users\<user>\.anifold_cache.json)
+  --cache-ttl-hours CACHE_TTL_HOURS
+                        Cache TTL in hours (default: 24)
+  --max-retries MAX_RETRIES
+                        Max API retry attempts (default: 3)
+  --retry-delay RETRY_DELAY
+                        Base retry delay in seconds (default: 2)
+```
+
+### Common Usage Examples
+
+```bash
+# Basic usage (auto-detects single folder or library)
+python anifold.py
+
+# Scan entire library
+python anifold.py --library "D:\My Anime Collection"
+
+# Batch processing with no interaction needed
+python anifold.py --library "D:\Anime" --auto-select --no-wait
+
+# Preview mode (dry run)
+python anifold.py --library "D:\Anime" --dry-run
+
+# Force single folder processing
+python anifold.py --single
+
+# Custom icon directory
+python anifold.py --icon-dir "C:\My Icons" --library "D:\Anime"
+
+# With logging for troubleshooting
+python anifold.py --library "D:\Anime" --log process.log
+
+# Full automation with all options
+python anifold.py --library "D:\Anime" --auto-select --no-wait --log batch.log --icon-dir "C:\AnimeIcons" --max-retries 5
 ```
 
 ---
