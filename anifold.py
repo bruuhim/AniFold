@@ -408,7 +408,11 @@ def process_anime_folder(folder_path, args, logger=None):
             print(f"{Colors.CYAN}📂 Save icon to: {args.icon_dir}{Colors.RESET}")
             input(f"{Colors.YELLOW}⏸️  Press ENTER when downloaded...{Colors.RESET}")
 
-        icon_path = find_valid_icon(args.icon_dir)
+        # Track icons before download to only use newly downloaded ones for this anime
+        existing_icons = {f.name for f in Path(args.icon_dir).glob("*.ico") if f.is_file()}
+        existing_mtimes = {f.name: f.stat().st_mtime for f in Path(args.icon_dir).glob("*.ico") if f.is_file()}
+
+        icon_path = find_new_valid_icon(args.icon_dir, existing_icons)
 
         if icon_path and not args.dry_run:
             if apply_folder_icon(icon_path):
@@ -460,6 +464,40 @@ def get_anime_name_from_mal_auto(guess, args, logger=None):
             return guess
     else:
         return get_anime_name_from_mal(guess)
+
+def find_new_valid_icon(icon_dir, existing_icons):
+    """Find the latest valid .ico file among newly downloaded ones"""
+    icon_dir = Path(icon_dir)
+    icon_dir.mkdir(exist_ok=True)
+
+    ico_files = list(icon_dir.glob("*.ico"))
+    if not ico_files:
+        print(f"{Colors.RED}❌ No .ico files found in: {icon_dir}{Colors.RESET}")
+        print(f"{Colors.RED}❌ Did you download an icon for this anime?{Colors.RESET}")
+        return None
+
+    # Filter to only new icons (not in existing_icons set)
+    new_ico_files = [f for f in ico_files if f.name not in existing_icons]
+
+    if not new_ico_files:
+        print(f"{Colors.RED}❌ No new icons downloaded - all existing icons are from previous sessions{Colors.RESET}")
+        print(f"{Colors.RED}❌ Please download an icon for this anime to continue{Colors.RESET}")
+        return None
+
+    # Sort by modification time (newest first)
+    new_ico_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+
+    # Try to find a valid ICO file among new ones
+    for ico_file in new_ico_files:
+        if validate_ico_file(ico_file):
+            print(f"{Colors.GREEN}📦 Using newly downloaded: {ico_file.name}{Colors.RESET}")
+            return str(ico_file)
+        else:
+            print(f"{Colors.YELLOW}⚠️  Skipping invalid ICO: {ico_file.name}{Colors.RESET}")
+
+    print(f"{Colors.RED}❌ No valid icons found among newly downloaded files{Colors.RESET}")
+    return None
+
 
 def find_valid_icon(icon_dir):
     """Find the latest valid .ico file in directory"""
