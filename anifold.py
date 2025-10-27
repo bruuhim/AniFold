@@ -397,6 +397,12 @@ def process_anime_folder(folder_path, args, logger=None):
             print(f"{Colors.RED}❌ Could not determine anime name, skipping...{Colors.RESET}")
             return False
 
+        # Track icons before download to only use newly downloaded ones for this anime
+        import time
+        before_time = time.time()
+        existing_icons = {f.name for f in Path(args.icon_dir).glob("*.ico") if f.is_file()}
+        existing_mtimes = {f.name: f.stat().st_mtime for f in Path(args.icon_dir).glob("*.ico") if f.is_file()}
+
         # Search DeviantArt
         if not args.dry_run:
             search_deviantart(anime_name)
@@ -408,11 +414,7 @@ def process_anime_folder(folder_path, args, logger=None):
             print(f"{Colors.CYAN}📂 Save icon to: {args.icon_dir}{Colors.RESET}")
             input(f"{Colors.YELLOW}⏸️  Press ENTER when downloaded...{Colors.RESET}")
 
-        # Track icons before download to only use newly downloaded ones for this anime
-        existing_icons = {f.name for f in Path(args.icon_dir).glob("*.ico") if f.is_file()}
-        existing_mtimes = {f.name: f.stat().st_mtime for f in Path(args.icon_dir).glob("*.ico") if f.is_file()}
-
-        icon_path = find_new_valid_icon(args.icon_dir, existing_icons)
+        icon_path = find_new_valid_icon(args.icon_dir, existing_icons, before_time)
 
         if icon_path and not args.dry_run:
             if apply_folder_icon(icon_path):
@@ -465,7 +467,7 @@ def get_anime_name_from_mal_auto(guess, args, logger=None):
     else:
         return get_anime_name_from_mal(guess)
 
-def find_new_valid_icon(icon_dir, existing_icons):
+def find_new_valid_icon(icon_dir, existing_icons, before_time):
     """Find the latest valid .ico file among newly downloaded ones"""
     icon_dir = Path(icon_dir)
     icon_dir.mkdir(exist_ok=True)
@@ -476,8 +478,8 @@ def find_new_valid_icon(icon_dir, existing_icons):
         print(f"{Colors.RED}❌ Did you download an icon for this anime?{Colors.RESET}")
         return None
 
-    # Filter to only new icons (not in existing_icons set)
-    new_ico_files = [f for f in ico_files if f.name not in existing_icons]
+    # Filter to only new icons (not in existing_icons set or modified after before_time)
+    new_ico_files = [f for f in ico_files if f.name not in existing_icons or f.stat().st_mtime > before_time]
 
     if not new_ico_files:
         print(f"{Colors.RED}❌ No new icons downloaded - all existing icons are from previous sessions{Colors.RESET}")
