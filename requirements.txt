@@ -1,0 +1,2 @@
+# AniFold has no external dependencies!
+# Standard library only
